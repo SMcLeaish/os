@@ -1,3 +1,4 @@
+use core::fmt;
 use volatile::Volatile;
 
 #[allow(dead_code)]
@@ -72,7 +73,7 @@ impl Writer {
             }
         }
     }
-    pub fn write_str(&mut self, s: &str) {
+    pub fn write_string(&mut self, s: &str) {
         for byte in s.bytes() {
             match byte {
                 0x20..0x7e | b'\n' => self.write_byte(byte),
@@ -83,7 +84,12 @@ impl Writer {
     fn new_line(&mut self) { /* TODO */
     }
 }
-
+impl fmt::Write for Writer {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        self.write_string(s);
+        Ok(())
+    }
+}
 pub fn print_something() {
     let mut writer = Writer {
         column_position: 0,
@@ -91,6 +97,7 @@ pub fn print_something() {
         buffer: unsafe { &mut *(0xb8000 as *mut Buffer) },
     };
     writer.write_byte(b'H');
-    writer.write_str("ello");
-    writer.write_str("Wörld!");
+    writer.write_string("ello");
+    use fmt::Write;
+    write!(writer, "The numbers are {} and {}", 42, 1.0 / 3.0).unwrap();
 }
